@@ -60,8 +60,8 @@ func newServeCommand() *cli.Command {
 	return &cli.Command{
 		Name:    "serve",
 		Aliases: []string{"s"},
-		Usage: "Start honeypot HTTP server",
-		Flags: flags,
+		Usage:   "Start honeypot HTTP server",
+		Flags:   flags,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			logger := logCfg.Configure()
 			slog.SetDefault(logger)
@@ -110,6 +110,7 @@ func newServeCommand() *cli.Command {
 					SiteType:   promptCfg.SiteType,
 					Style:      promptCfg.Style,
 					Taste:      promptCfg.Taste,
+					Layout:     promptCfg.Layout,
 					Lang:       promptCfg.Lang,
 					Extra:      extra,
 					MaxRetries: maxRetries,

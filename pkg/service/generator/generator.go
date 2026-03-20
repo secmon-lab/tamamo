@@ -67,36 +67,43 @@ func New(llmClient gollem.LLMClient, outputDir string, params *prompts.Params, o
 }
 
 // Generate runs the LLM agent to create a scenario, retrying on validation failure.
+// Agent execution errors (TagExternal, TagGeneration) cause immediate failure.
+// Only validation errors (TagValidation) trigger retries.
 func (g *Generator) Generate(ctx context.Context) (*scenario.Scenario, error) {
-	var lastErr error
+	var lastValidationErr error
 
-	for attempt := range g.maxRetries {
+	retries := g.maxRetries
+	if retries < 0 {
+		retries = 0
+	}
+
+	for attempt := range retries + 1 {
 		if attempt > 0 {
 			g.logger.Info("retrying scenario generation",
-				"attempt", attempt+1,
-				"max_retries", g.maxRetries,
-				"last_error", lastErr.Error(),
+				"retry", attempt,
+				"max_retries", retries,
+				"last_error", lastValidationErr.Error(),
 			)
 			g.printer.Message("")
-			g.printer.Message("🔄 Retrying generation (attempt " + itoa(attempt+1) + "/" + itoa(g.maxRetries) + ")...")
-			g.printer.Message("   Previous error: " + lastErr.Error())
+			g.printer.Message("🔄 Retrying generation (retry " + itoa(attempt) + "/" + itoa(retries) + ")...")
+			g.printer.Message("   Previous error: " + lastValidationErr.Error())
 		}
 
-		s, err := g.generate(ctx, lastErr)
+		s, err := g.generate(ctx, lastValidationErr)
 		if err == nil {
 			return s, nil
 		}
 
-		// Only retry on validation errors
+		// Only retry on validation errors; all other errors fail immediately
 		if !goerr.HasTag(err, errutil.TagValidation) {
 			return nil, err
 		}
-		lastErr = err
+		lastValidationErr = err
 	}
 
-	return nil, goerr.Wrap(lastErr, "scenario generation failed after all retries",
-		goerr.V("max_retries", g.maxRetries),
-		goerr.T(errutil.TagGeneration),
+	return nil, goerr.Wrap(lastValidationErr, "scenario validation failed after all retries",
+		goerr.V("max_retries", retries),
+		goerr.T(errutil.TagValidation),
 	)
 }
 

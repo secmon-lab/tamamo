@@ -15,6 +15,7 @@ type GenerateOption struct {
 	SiteType   string
 	Style      string
 	Taste      string
+	Layout     string
 	Lang       string
 	Extra      string
 	MaxRetries int
@@ -33,6 +34,7 @@ func (u *UseCase) Generate(ctx context.Context, outputDir string, opt GenerateOp
 		SiteType:    opt.SiteType,
 		Style:       opt.Style,
 		Taste:       opt.Taste,
+		Layout:      opt.Layout,
 		Lang:        opt.Lang,
 		ExtraPrompt: opt.Extra,
 	}

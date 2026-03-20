@@ -15,9 +15,9 @@ import (
 
 // LLM holds LLM configuration.
 type LLM struct {
-	provider   string
-	apiKey     string
-	model      string
+	provider       string
+	apiKey         string
+	model          string
 	geminiProject  string
 	geminiLocation string
 }
