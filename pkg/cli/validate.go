@@ -32,8 +32,8 @@ func newValidateCommand() *cli.Command {
 	return &cli.Command{
 		Name:    "validate",
 		Aliases: []string{"v"},
-		Usage: "Validate scenario data integrity",
-		Flags: flags,
+		Usage:   "Validate scenario data integrity",
+		Flags:   flags,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			s, err := scenarioSvc.Load(ctx, scenarioPath)
 			if err != nil {

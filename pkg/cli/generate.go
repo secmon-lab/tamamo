@@ -13,9 +13,9 @@ import (
 
 func newGenerateCommand() *cli.Command {
 	var (
-		llmCfg    config.LLM
-		logCfg    config.Logger
-		promptCfg config.Prompt
+		llmCfg     config.LLM
+		logCfg     config.Logger
+		promptCfg  config.Prompt
 		output     string
 		dumpDir    string
 		keepTmp    bool
@@ -54,8 +54,8 @@ func newGenerateCommand() *cli.Command {
 	return &cli.Command{
 		Name:    "generate",
 		Aliases: []string{"g"},
-		Usage: "Generate honeypot scenario data using LLM",
-		Flags: flags,
+		Usage:   "Generate honeypot scenario data using LLM",
+		Flags:   flags,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			logger := logCfg.Configure()
 			llmCfg.LogConfig(logger)
@@ -92,6 +92,7 @@ func newGenerateCommand() *cli.Command {
 				SiteType:   promptCfg.SiteType,
 				Style:      promptCfg.Style,
 				Taste:      promptCfg.Taste,
+				Layout:     promptCfg.Layout,
 				Lang:       promptCfg.Lang,
 				Extra:      extra,
 				MaxRetries: maxRetries,

@@ -14,6 +14,7 @@ type Prompt struct {
 	SiteType    string
 	Style       string
 	Taste       string
+	Layout      string
 	Lang        string
 	ExtraPrompt string
 	PromptFile  string
@@ -39,6 +40,12 @@ func (c *Prompt) Flags() []cli.Flag {
 			Usage:       "Taste/atmosphere (e.g., \"Large enterprise\", \"Startup\")",
 			Sources:     cli.EnvVars("TAMAMO_SITE_TASTE"),
 			Destination: &c.Taste,
+		},
+		&cli.StringFlag{
+			Name:        "site-layout",
+			Usage:       "Page layout pattern (e.g., \"split-screen\", \"terminal-cli\")",
+			Sources:     cli.EnvVars("TAMAMO_SITE_LAYOUT"),
+			Destination: &c.Layout,
 		},
 		&cli.StringFlag{
 			Name:        "site-lang",
@@ -71,6 +78,9 @@ func (c *Prompt) LogConfig(logger *slog.Logger) {
 	}
 	if c.Taste != "" {
 		attrs = append(attrs, slog.String("site_taste", c.Taste))
+	}
+	if c.Layout != "" {
+		attrs = append(attrs, slog.String("site_layout", c.Layout))
 	}
 	if c.Lang != "" {
 		attrs = append(attrs, slog.String("site_lang", c.Lang))

@@ -9,6 +9,7 @@ Generate all files using the `write_file` tool. You must create ALL required fil
 - **Site Type**: {{ .SiteType }}
 - **Visual Style**: {{ .Style }}
 - **Taste/Atmosphere**: {{ .Taste }}
+- **Page Layout**: {{ .Layout }}
 - **Display Language**: {{ .Lang }}
 
 ## Required Files
@@ -30,12 +31,35 @@ You MUST generate the following files:
 ```
 
 ### 2. `pages/login.html` - Login Page
-Create a realistic HTML login page with embedded CSS and JavaScript:
+
+Create a realistic HTML login page with embedded CSS and JavaScript.
+
+**IMPORTANT — Layout directive:** You MUST follow the page layout specified above. The layout defines the overall spatial arrangement and composition of the page. Do NOT default to a generic centered card layout — strictly implement the layout pattern described.
+
+**IMPORTANT — Avoid uniformity:** Real-world login pages are wildly diverse. Do NOT produce a cookie-cutter "icon → title → username → password → button → footer" page. Instead, think about what a real developer would build for this specific site type, style, and taste. Every decision — what fields to show, what extra UI elements to include, how to arrange them — should feel like a deliberate choice made by someone building this specific application.
+
+**Form fields — choose what fits the site type, not a fixed template:**
+
+The login form should use whatever credential fields make sense for this specific application. Do NOT always use "Username" and "Password". Consider the site type and pick appropriate fields. The following are *examples only* — do not limit yourself to these, and do not use all of them:
+
+- Identifier fields: Username, Email address, Employee ID, Badge number, Account number, Phone number, Domain\Username, Registration code, Access key ID — pick what fits naturally
+- Secret fields: Password, Passphrase, PIN, Security code, One-time code, Access token, Secret key
+- Additional context fields: Organization, Tenant name, Domain, Department, Server, Region selector, Database name, Environment (prod/staging/dev)
+
+**Extra UI elements — sprinkle in what feels natural:**
+
+Real login pages often have more than just input fields. Pick a few (not all!) of these that match the site's character. These are *reference examples* — feel free to invent your own elements that aren't listed here:
+
+- Checkboxes/toggles: Remember me, Keep me signed in, Trust this device, Agree to terms, Use secure connection, Enable MFA
+- Links/text: Forgot password, Reset credentials, Need help?, Contact IT, Request access, Create account, Privacy policy, Terms of service, System status, Back to portal
+- Auth method UI: SSO button ("Sign in with SSO"), SAML login, "Use Corporate Account", Certificate-based auth selector, LDAP/AD toggle, OAuth provider buttons, QR code login, Hardware key prompt, Biometric prompt icon
+- Notices/banners: System maintenance notice, Security warning, Password expiry alert, Browser compatibility warning, New version available, Scheduled downtime, "Unauthorized access is monitored" disclaimer, Session expired message, IP restriction notice
+- Branding elements: Company name, Division/department name, Product version, Build number, Environment badge (Production/Staging/Development/QA), Last updated date, Server region, Deployment ID, Support contact, "Internal use only" watermark
+
+**Technical requirements:**
 - Must look like a genuine internal admin login page
 - Include a company/app logo area — you may use inline SVG, CSS shapes, data URI images, or emoji to create a logo. Be creative and make it look real
-- Username and password input fields
-- "Sign In" / "Log In" button (or equivalent in the display language)
-- Realistic footer (copyright, version number, etc.)
+- A submit button with appropriate label (or equivalent in the display language)
 - Style must match the configured visual style and taste
 - All text must be in the configured display language
 - You may also generate favicon or other images as separate files using data URIs or inline SVG
@@ -43,13 +67,17 @@ Create a realistic HTML login page with embedded CSS and JavaScript:
 **Images and assets:** You are encouraged to generate inline images (SVG, data URI PNG/JPEG) to make the page look more realistic. Logos, icons, background patterns — anything that adds to the believability. Write image files (e.g., `pages/logo.svg`, `pages/favicon.ico`) if it helps.
 
 ### 3. `pages/dashboard.html` - Dashboard Page (Perpetual Loading)
-Create a dashboard page that shows a perpetual loading state:
-- Display a realistic loading screen with spinner/progress bar
-- Show rotating status messages that simulate system initialization (8-12 messages)
-- Messages should change every 3-5 seconds
-- Include a subtle progress bar that moves very slowly but never completes
-- The page should never finish loading (this is intentional - it keeps the attacker engaged)
-- Style must match the login page
+
+Create a dashboard page that shows a perpetual loading state. The page should never finish loading (this is intentional — it keeps the attacker engaged). Style must match the login page.
+
+**Choose a loading style that fits the application's character** — do NOT always use the same spinner + status messages pattern. Pick one approach (or combine creatively):
+
+- **Skeleton UI**: Grey placeholder blocks that shimmer/pulse where content would be. Looks like the real dashboard is about to appear but never does. Most modern and convincing.
+- **Status messages**: Rotating text messages simulating system initialization ("Loading modules...", "Connecting to database...", etc.). 8-12 messages cycling every 3-5 seconds. Classic approach.
+- **Progress bar**: A progress bar that creeps forward very slowly (asymptotic — approaches but never reaches 100%). May include a percentage counter and estimated time remaining that keeps recalculating.
+- **Splash screen**: Full-screen branded splash with a subtle animation (spinning logo, pulsing dots, animated gradient). Feels like a heavy enterprise app booting up.
+- **Partial render**: Dashboard layout partially visible (sidebar, header, nav) but main content area shows a loading overlay. Most convincing — looks like the app loaded but data is still fetching.
+- **Connection retry**: Shows "Connecting to server..." with retry counter and fake error recovery. Cycles between "connected" and "reconnecting" states.
 
 ### 4. `routes.json` - Route Definitions
 
