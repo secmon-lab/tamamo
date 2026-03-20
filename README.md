@@ -1,2 +1,167 @@
 # tamamo
-LLM based Web Honeypot
+
+LLM-driven web honeypot generator and server. Generates realistic "internal admin web pages" (login screens, dashboards, API endpoints) using LLM, and serves them as honeypots to capture attacker activity.
+
+## Features
+
+- **LLM-powered scenario generation** — Generates complete honeypot scenarios including login pages, dashboard pages, API routes, and server signatures using LLM agents
+- **Multi-provider LLM support** — OpenAI, Claude (Anthropic), and Gemini (Google Cloud)
+- **Realistic authentication simulation** — Configurable auth strategy that rejects initial login attempts before succeeding, mimicking real systems
+- **Event emission** — Captures all attacker interactions and reports via structured logging and/or webhook (with HMAC-SHA256 signature)
+- **Scenario portability** — Scenarios are exported as ZIP files and can be shared, versioned, and deployed independently
+- **Perpetual loading dashboard** — Post-login dashboard shows endless loading state to keep attackers engaged
+
+## Install
+
+```bash
+go install github.com/secmon-lab/tamamo@latest
+```
+
+## Quick Start
+
+### Generate a scenario
+
+```bash
+# Generate with default settings (random site type, style, taste)
+tamamo generate --llm-provider openai --llm-api-key $OPENAI_API_KEY
+
+# Customize the scenario
+tamamo generate \
+  --llm-provider claude \
+  --llm-api-key $ANTHROPIC_API_KEY \
+  --site-type "Employee directory & HR portal" \
+  --site-style "corporate-minimal" \
+  --site-taste "Looks like it was built 10 years ago and never updated" \
+  --site-lang "Japanese" \
+  --output my-scenario.zip
+```
+
+### Serve a scenario
+
+```bash
+# Serve a pre-generated scenario
+tamamo serve --scenario my-scenario.zip --addr 0.0.0.0:8080
+
+# Auto-generate and serve in one step
+tamamo serve \
+  --llm-provider openai \
+  --llm-api-key $OPENAI_API_KEY \
+  --addr 0.0.0.0:8080
+```
+
+### Validate a scenario
+
+```bash
+tamamo validate --scenario my-scenario.zip
+```
+
+## Commands
+
+### `tamamo generate`
+
+Generate a honeypot scenario using LLM.
+
+| Flag | Env | Description |
+|------|-----|-------------|
+| `--llm-provider` | `TAMAMO_LLM_PROVIDER` | LLM provider: `openai`, `claude`, `gemini` |
+| `--llm-api-key` | `TAMAMO_LLM_API_KEY` | API key for the LLM provider |
+| `--llm-model` | `TAMAMO_LLM_MODEL` | Model name (provider-specific default if omitted) |
+| `--output`, `-o` | | Output ZIP file path (default: `scenario.zip`) |
+| `--site-type` | `TAMAMO_SITE_TYPE` | Site type (random if omitted) |
+| `--site-style` | `TAMAMO_SITE_STYLE` | Visual style (random if omitted) |
+| `--site-taste` | `TAMAMO_SITE_TASTE` | Taste/atmosphere (random if omitted) |
+| `--site-lang` | `TAMAMO_SITE_LANG` | Display language (default: English) |
+| `--extra-prompt` | `TAMAMO_EXTRA_PROMPT` | Additional prompt text |
+| `--prompt-file` | | Additional prompt from file |
+| `--max-retries` | | Max retries on validation failure (default: 3) |
+| `--dump-dir` | | Dump raw files to directory (debugging) |
+| `--keep-tmp` | | Keep temp generation directory (debugging) |
+
+For Gemini provider:
+
+| Flag | Env | Description |
+|------|-----|-------------|
+| `--gemini-project` | `TAMAMO_GEMINI_PROJECT` | Google Cloud project ID |
+| `--gemini-location` | `TAMAMO_GEMINI_LOCATION` | Google Cloud location (default: `us-central1`) |
+
+### `tamamo serve`
+
+Start the honeypot HTTP server.
+
+| Flag | Env | Description |
+|------|-----|-------------|
+| `--scenario`, `-s` | | Scenario ZIP or directory path (auto-generates if omitted) |
+| `--addr` | | Listen address (default: `127.0.0.1:8080`) |
+| `--node-id` | `TAMAMO_NODE_ID` | Node identifier (default: hostname) |
+| `--webhook-url` | `TAMAMO_WEBHOOK_URL` | Webhook URL for event notification |
+| `--webhook-secret` | `TAMAMO_WEBHOOK_SECRET` | HMAC-SHA256 signing secret for webhook |
+
+All `generate` flags are also available when `--scenario` is omitted.
+
+### `tamamo validate`
+
+Validate a scenario for correctness. Reports all errors at once.
+
+| Flag | Description |
+|------|-------------|
+| `--scenario`, `-s` | Scenario ZIP or directory path (required) |
+
+## Scenario Structure
+
+A scenario is a ZIP file (or directory) containing:
+
+```
+scenario.json       # Metadata (name, server signature, headers)
+routes.json         # Route definitions (paths, methods, responses)
+pages/
+  login.html        # Login page
+  dashboard.html    # Perpetual loading dashboard
+  logo.svg          # (optional) Generated images/assets
+```
+
+### Authentication Strategy
+
+Login endpoints support an `auth` field in `routes.json` that simulates realistic authentication behavior:
+
+```json
+{
+  "path": "/api/auth/login",
+  "method": "POST",
+  "status_code": 200,
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"success\": true, \"redirect\": \"/dashboard\"}",
+  "auth": {
+    "failures_before_success": 2,
+    "failure_status_code": 401,
+    "failure_body": "{\"success\": false, \"error\": \"Invalid credentials\"}",
+    "failure_headers": {"Content-Type": "application/json"}
+  }
+}
+```
+
+The server tracks attempts per source IP. With `failures_before_success: 2`, the first 2 attempts return 401, and the 3rd succeeds — making the honeypot behave like a real system.
+
+## Event Notification
+
+All attacker interactions are captured and emitted as structured events:
+
+```json
+{
+  "timestamp": "2026-03-20T12:34:56Z",
+  "node_id": "honeypot-01",
+  "event_type": "http_request",
+  "source_ip": "203.0.113.1",
+  "method": "POST",
+  "path": "/api/auth/login",
+  "headers": {"User-Agent": "..."},
+  "body": {"username": "admin", "password": "P@ssw0rd"},
+  "scenario": "acme-corp-admin"
+}
+```
+
+- **Log** (always active): Structured log output via slog
+- **Webhook**: HTTP POST with `X-Tamamo-Signature: sha256=<hex>` header (HMAC-SHA256)
+
+## License
+
+Apache License 2.0

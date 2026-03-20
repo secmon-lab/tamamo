@@ -1,0 +1,26 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: mock
+
+  mock:
+    desc: Generate all mock files
+    cmds:
+      - go generate ./...
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run ./...
