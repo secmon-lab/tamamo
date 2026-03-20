@@ -72,15 +72,20 @@ func New(llmClient gollem.LLMClient, outputDir string, params *prompts.Params, o
 func (g *Generator) Generate(ctx context.Context) (*scenario.Scenario, error) {
 	var lastValidationErr error
 
-	for attempt := range g.maxRetries {
+	retries := g.maxRetries
+	if retries < 0 {
+		retries = 0
+	}
+
+	for attempt := range retries + 1 {
 		if attempt > 0 {
 			g.logger.Info("retrying scenario generation",
-				"attempt", attempt+1,
-				"max_retries", g.maxRetries,
+				"retry", attempt,
+				"max_retries", retries,
 				"last_error", lastValidationErr.Error(),
 			)
 			g.printer.Message("")
-			g.printer.Message("🔄 Retrying generation (attempt " + itoa(attempt+1) + "/" + itoa(g.maxRetries) + ")...")
+			g.printer.Message("🔄 Retrying generation (retry " + itoa(attempt) + "/" + itoa(retries) + ")...")
 			g.printer.Message("   Previous error: " + lastValidationErr.Error())
 		}
 
@@ -97,7 +102,7 @@ func (g *Generator) Generate(ctx context.Context) (*scenario.Scenario, error) {
 	}
 
 	return nil, goerr.Wrap(lastValidationErr, "scenario validation failed after all retries",
-		goerr.V("max_retries", g.maxRetries),
+		goerr.V("max_retries", retries),
 		goerr.T(errutil.TagValidation),
 	)
 }
