@@ -10,6 +10,7 @@ Generate all files using the `write_file` tool. You must create ALL required fil
 - **Visual Style**: {{ .Style }}
 - **Taste/Atmosphere**: {{ .Taste }}
 - **Page Layout**: {{ .Layout }}
+- **Color Scheme**: {{ .ColorScheme }}
 - **Display Language**: {{ .Lang }}
 
 ## Required Files
@@ -61,6 +62,7 @@ Real login pages often have more than just input fields. Pick a few (not all!) o
 - Include a company/app logo area — you may use inline SVG, CSS shapes, data URI images, or emoji to create a logo. Be creative and make it look real
 - A submit button with appropriate label (or equivalent in the display language)
 - Style must match the configured visual style and taste
+- **Color scheme is mandatory** — the page's color palette MUST follow the color scheme specified above. The color scheme defines the dominant colors, background tones, accent colors, and overall chromatic mood. Do NOT ignore it or default to a generic blue/white palette. The color scheme should be the primary driver of all color choices in the CSS
 - All text must be in the configured display language
 - You may also generate favicon or other images as separate files using data URIs or inline SVG
 

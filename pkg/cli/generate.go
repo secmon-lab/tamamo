@@ -89,13 +89,14 @@ func newGenerateCommand() *cli.Command {
 			)
 
 			s, err := uc.Generate(ctx, tmpDir, usecase.GenerateOption{
-				SiteType:   promptCfg.SiteType,
-				Style:      promptCfg.Style,
-				Taste:      promptCfg.Taste,
-				Layout:     promptCfg.Layout,
-				Lang:       promptCfg.Lang,
-				Extra:      extra,
-				MaxRetries: maxRetries,
+				SiteType:    promptCfg.SiteType,
+				Style:       promptCfg.Style,
+				Taste:       promptCfg.Taste,
+				Layout:      promptCfg.Layout,
+				ColorScheme: promptCfg.ColorScheme,
+				Lang:        promptCfg.Lang,
+				Extra:       extra,
+				MaxRetries:  maxRetries,
 			})
 			if err != nil {
 				return err

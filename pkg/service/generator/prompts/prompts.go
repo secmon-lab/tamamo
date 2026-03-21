@@ -20,6 +20,7 @@ type Params struct {
 	Style       string
 	Taste       string
 	Layout      string
+	ColorScheme string
 	Lang        string
 	ExtraPrompt string
 }
@@ -177,6 +178,37 @@ var (
 
 		`iframe-embedded: The login form appears to be embedded within a larger parent page. The parent page has its own header (with company logo, navigation links like "Home", "Products", "Support") and footer. The login area sits in the middle content zone, possibly with a border or slight inset that makes it look like an iframe or embedded component. Feels like a corporate website with a login widget.`,
 	}
+	defaultColorSchemes = []string{
+		`corporate-blue: Navy and blue tones as the base. Navy blue for headers and buttons, bright blue or teal for accents. White background with blue links and text. The trustworthy palette seen in banking, insurance, and large enterprise admin panels.`,
+
+		`dark-charcoal: Dark grey to charcoal background with light grey or off-white text. Subdued blue or purple accents. The dark theme commonly used in DevOps tools, IDEs, and monitoring dashboards.`,
+
+		`forest-green: Deep green base paired with beige or cream backgrounds. A calm, natural feel suited to environmental, agricultural, medical systems or ERPs. Emerald green for buttons and accents.`,
+
+		`warm-amber: Amber, orange, and warm tones at the center. Dark brown background with gold and amber accents. The warm design seen in logistics, warehouse management, and manufacturing floor tools.`,
+
+		`slate-minimal: Highly restrained monotone palette of stone grey to slate blue. Minimal decoration. Dark slate text, light grey background, only one accent color (pale blue or teal). Modern SaaS admin panel style.`,
+
+		`crimson-alert: Red and crimson as accent colors creating a sense of urgency. White or light grey background with red warning banners and red buttons. Fits security tools, incident management, and alert dashboards.`,
+
+		`ocean-teal: Teal to cyan base with a cool, refreshing feel. Bright teal header, white background, dark teal text. The clean design commonly seen in medical portals, SaaS, and cloud management consoles.`,
+
+		`purple-dusk: Purple to indigo palette. Deep purple headers and sidebars, lavender-tinted light backgrounds, magenta accents. Suits marketing tools, analytics dashboards, and creative tools.`,
+
+		`sandstone-earth: Earth tones unified with beige, sandstone, and terracotta. Warm grey background with brown text. An old-fashioned calm atmosphere that looks like a university admin system, library system, or municipal portal.`,
+
+		`arctic-white: Nearly pure white background with very faint grey borders and ultra-thin lines. Only text and icons stand out. Ultra-clean Apple/Google-style modern minimalism. Accent colors limited to black or dark grey only.`,
+
+		`midnight-neon: Jet black background with vivid neon color accents (cyan, magenta, lime green). Suits cybersecurity tools, hacking contests, and cutting-edge tech dashboards. Includes glow effects and neon-style text shadows.`,
+
+		`olive-military: Olive green, khaki, and tan in a military-inspired palette. Dark olive background with khaki buttons and amber warning colors. The rugged design seen in government, defense, and SCADA systems.`,
+
+		`steel-industrial: Metallic grey and steel blue as the industrial base. Grey gradient backgrounds with silver borders, orange and yellow warning colors. Fits manufacturing, facility management, and factory control panels.`,
+
+		`vintage-sepia: Warm retro palette in sepia tones and browns. Beige background with dark brown text and orange-brown links. Perfect for evoking a legacy system feel — old intranets and records management systems.`,
+
+		`high-contrast-mono: Pure black and white two-color high contrast. Black background with white text, or white background with black text. Borders and separators also black and white only. Suits accessibility-focused or terminal-style systems, or austere government portals.`,
+	}
 	defaultLang = "English"
 )
 
@@ -193,6 +225,9 @@ func (p *Params) Resolve() {
 	}
 	if p.Layout == "" {
 		p.Layout = defaultLayouts[cryptoRandN(len(defaultLayouts))]
+	}
+	if p.ColorScheme == "" {
+		p.ColorScheme = defaultColorSchemes[cryptoRandN(len(defaultColorSchemes))]
 	}
 	if p.Lang == "" {
 		p.Lang = defaultLang
