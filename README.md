@@ -8,6 +8,17 @@
 
 The name "tamamo" comes from [Tamamo-no-Mae (玉藻の前)](https://en.wikipedia.org/wiki/Tamamo-no-Mae), a legendary fox spirit in Japanese mythology known for its shape-shifting abilities. Just as Tamamo-no-Mae disguised itself to deceive, this tool disguises honeypots as legitimate services to deceive attackers.
 
+<table>
+  <tr>
+    <td><img src="./docs/images/examples/ex1_thumb.png" alt="PO-Tracker Admin" /></td>
+    <td><img src="./docs/images/examples/ex2_thumb.png" alt="LogiTrack Portal" /></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/images/examples/ex3_thumb.png" alt="NEON-CORE" /></td>
+    <td><img src="./docs/images/examples/ex4_thumb.png" alt="Healthcare Data Portal" /></td>
+  </tr>
+</table>
+
 ## Getting Started
 
 The fastest way to try tamamo — generate a scenario and start serving it in one command:
