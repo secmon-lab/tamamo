@@ -12,13 +12,14 @@ import (
 
 // GenerateOption holds parameters for scenario generation.
 type GenerateOption struct {
-	SiteType   string
-	Style      string
-	Taste      string
-	Layout     string
-	Lang       string
-	Extra      string
-	MaxRetries int
+	SiteType    string
+	Style       string
+	Taste       string
+	Layout      string
+	ColorScheme string
+	Lang        string
+	Extra       string
+	MaxRetries  int
 }
 
 // Generate creates a new honeypot scenario using the LLM.
@@ -35,6 +36,7 @@ func (u *UseCase) Generate(ctx context.Context, outputDir string, opt GenerateOp
 		Style:       opt.Style,
 		Taste:       opt.Taste,
 		Layout:      opt.Layout,
+		ColorScheme: opt.ColorScheme,
 		Lang:        opt.Lang,
 		ExtraPrompt: opt.Extra,
 	}

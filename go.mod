@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/m-mizutani/clog v0.2.1
 	github.com/m-mizutani/goerr/v2 v2.0.1
-	github.com/m-mizutani/gollem v0.23.1
+	github.com/m-mizutani/gollem v0.23.2-0.20260321041519-d49532d5ba59
 	github.com/m-mizutani/gt v0.2.1
 	github.com/urfave/cli/v3 v3.7.0
 )
@@ -55,6 +55,6 @@ require (
 	google.golang.org/api v0.264.0 // indirect
 	google.golang.org/genai v1.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260122232226-8e98ce8d340d // indirect
-	google.golang.org/grpc v1.78.0 // indirect
+	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )

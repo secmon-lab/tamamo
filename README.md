@@ -87,6 +87,7 @@ Generate a honeypot scenario using LLM.
 | `--site-type` | `TAMAMO_SITE_TYPE` | Site type (random if omitted) |
 | `--site-style` | `TAMAMO_SITE_STYLE` | Visual style (random if omitted) |
 | `--site-taste` | `TAMAMO_SITE_TASTE` | Taste/atmosphere (random if omitted) |
+| `--site-color` | `TAMAMO_SITE_COLOR` | Color scheme (random if omitted) |
 | `--site-lang` | `TAMAMO_SITE_LANG` | Display language (default: English) |
 | `--extra-prompt` | `TAMAMO_EXTRA_PROMPT` | Additional prompt text |
 | `--prompt-file` | | Additional prompt from file |
