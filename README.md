@@ -122,6 +122,9 @@ Start the honeypot HTTP server.
 | `--scenario`, `-s` | | Scenario ZIP or directory path (auto-generates if omitted) |
 | `--addr` | | Listen address (default: `127.0.0.1:8080`) |
 | `--node-id` | `TAMAMO_NODE_ID` | Node identifier (default: hostname) |
+| `--tls` | `TAMAMO_TLS` | Enable HTTPS with auto-generated self-signed certificate |
+| `--tls-cert` | `TAMAMO_TLS_CERT` | Path to TLS certificate file (requires `--tls` and `--tls-key`) |
+| `--tls-key` | `TAMAMO_TLS_KEY` | Path to TLS private key file (requires `--tls` and `--tls-cert`) |
 | `--webhook-url` | `TAMAMO_WEBHOOK_URL` | Webhook URL for event notification |
 | `--webhook-secret` | `TAMAMO_WEBHOOK_SECRET` | HMAC-SHA256 signing secret for webhook |
 
