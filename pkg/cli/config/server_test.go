@@ -66,4 +66,13 @@ func TestValidateTLS(t *testing.T) {
 		err := cfg.ValidateTLS()
 		gt.Value(t, err != nil).Equal(true)
 	})
+
+	t.Run("tls-key only without tls flag is error", func(t *testing.T) {
+		cfg := config.Server{
+			Addr:   "127.0.0.1:8080",
+			TLSKey: "/path/to/key.pem",
+		}
+		err := cfg.ValidateTLS()
+		gt.Value(t, err != nil).Equal(true)
+	})
 }
