@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net"
@@ -15,6 +16,7 @@ import (
 	"github.com/secmon-lab/tamamo/pkg/domain/interfaces"
 	"github.com/secmon-lab/tamamo/pkg/domain/model/scenario"
 	logEmitter "github.com/secmon-lab/tamamo/pkg/service/emitter/log"
+	"github.com/secmon-lab/tamamo/pkg/service/tlscert"
 	"github.com/secmon-lab/tamamo/pkg/usecase"
 	"github.com/secmon-lab/tamamo/pkg/utils/errutil"
 	"github.com/urfave/cli/v3"
@@ -140,11 +142,17 @@ func newServeCommand() *cli.Command {
 				}
 			}
 
+			// Validate TLS configuration
+			if err := serverCfg.ValidateTLS(); err != nil {
+				return err
+			}
+
 			// Create controller and start server
 			srv := honeypotHTTP.New(s, nodeID, emitters)
 
 			logger.Info("starting honeypot server",
 				"addr", serverCfg.Addr,
+				"tls", serverCfg.TLS,
 				"scenario", s.Meta.Name,
 				"node_id", nodeID,
 			)
@@ -157,6 +165,40 @@ func newServeCommand() *cli.Command {
 				)
 			}
 			defer func() { _ = listener.Close() }()
+
+			// Wrap listener with TLS if enabled
+			if serverCfg.TLS {
+				var cert *tls.Certificate
+				if serverCfg.TLSCert != "" {
+					// Load user-provided certificate
+					loaded, err := tls.LoadX509KeyPair(serverCfg.TLSCert, serverCfg.TLSKey)
+					if err != nil {
+						return goerr.Wrap(err, "failed to load TLS certificate",
+							goerr.V("cert", serverCfg.TLSCert),
+							goerr.V("key", serverCfg.TLSKey),
+							goerr.T(errutil.TagNotFound),
+						)
+					}
+					cert = &loaded
+					logger.Info("using provided TLS certificate",
+						"cert", serverCfg.TLSCert,
+					)
+				} else {
+					// Auto-generate self-signed certificate
+					generated, err := tlscert.Generate()
+					if err != nil {
+						return err
+					}
+					cert = generated
+					logger.Info("generated self-signed TLS certificate")
+				}
+
+				tlsConfig := &tls.Config{
+					Certificates: []tls.Certificate{*cert},
+					MinVersion:   tls.VersionTLS12,
+				}
+				listener = tls.NewListener(listener, tlsConfig)
+			}
 
 			server := &http.Server{
 				Handler:           srv.Handler(),
