@@ -36,7 +36,7 @@ Then open http://localhost:8080 in your browser. You'll see a realistic-looking 
 - **LLM-powered scenario generation** — Generates complete honeypot scenarios including login pages, dashboard pages, API routes, and server signatures using LLM agents
 - **Multi-provider LLM support** — OpenAI, Claude (Anthropic), and Gemini (Google Cloud)
 - **Realistic authentication simulation** — Configurable auth strategy that rejects initial login attempts before succeeding, mimicking real systems
-- **Event emission** — Captures all attacker interactions and reports via structured logging and/or webhook (with HMAC-SHA256 signature)
+- **Event emission** — Captures all attacker interactions and reports via structured logging, webhook (with HMAC-SHA256 signature), and/or Google Cloud Pub/Sub
 - **Scenario portability** — Scenarios are exported as ZIP files and can be shared, versioned, and deployed independently
 
 ## Install
@@ -127,6 +127,9 @@ Start the honeypot HTTP server.
 | `--tls-key` | `TAMAMO_TLS_KEY` | Path to TLS private key file (requires `--tls` and `--tls-cert`) |
 | `--webhook-url` | `TAMAMO_WEBHOOK_URL` | Webhook URL for event notification |
 | `--webhook-secret` | `TAMAMO_WEBHOOK_SECRET` | HMAC-SHA256 signing secret for webhook |
+| `--pubsub-project-id` | `TAMAMO_PUBSUB_PROJECT_ID` | Google Cloud project ID for Pub/Sub |
+| `--pubsub-topic-id` | `TAMAMO_PUBSUB_TOPIC_ID` | Pub/Sub topic ID for event notification |
+| `--pubsub-sa-key` | `TAMAMO_PUBSUB_SA_KEY` | Service account key JSON data (takes priority over ADC) |
 
 All `generate` flags are also available when `--scenario` is omitted.
 
