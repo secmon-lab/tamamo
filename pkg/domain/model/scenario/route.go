@@ -14,6 +14,10 @@ type Route struct {
 	Body       string            `json:"body"`
 	BodyFile   string            `json:"body_file,omitempty"`
 	Auth       *AuthStrategy     `json:"auth,omitempty"`
+
+	// Hang makes the route wait indefinitely without sending a response.
+	// The connection stays open until the client gives up (timeout).
+	Hang bool `json:"hang,omitempty"`
 }
 
 // Validate checks the route for required fields.
@@ -30,7 +34,7 @@ func (r *Route) Validate() error {
 			goerr.T(errutil.TagValidation),
 		)
 	}
-	if r.StatusCode == 0 {
+	if r.StatusCode == 0 && !r.Hang {
 		return goerr.New("route missing required field",
 			goerr.V("field", "status_code"),
 			goerr.T(errutil.TagValidation),

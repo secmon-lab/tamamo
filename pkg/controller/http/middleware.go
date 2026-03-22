@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -17,15 +18,31 @@ func (s *Server) emitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Capture request body for event (limited to 1MB)
 		var bodyData any
-		if r.Body != nil && r.ContentLength > 0 {
+		if r.Body != nil {
 			bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, 1024*1024))
 			if err == nil && len(bodyBytes) > 0 {
-				// Try to parse as JSON
-				var jsonBody any
-				if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
-					bodyData = jsonBody
-				} else {
-					bodyData = string(bodyBytes)
+				contentType := r.Header.Get("Content-Type")
+				switch {
+				case strings.HasPrefix(contentType, "application/x-www-form-urlencoded"):
+					if values, err := url.ParseQuery(string(bodyBytes)); err == nil {
+						parsed := make(map[string]string, len(values))
+						for k, v := range values {
+							if len(v) > 0 {
+								parsed[k] = v[0]
+							}
+						}
+						bodyData = parsed
+					} else {
+						bodyData = string(bodyBytes)
+					}
+				default:
+					// Try to parse as JSON
+					var jsonBody any
+					if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
+						bodyData = jsonBody
+					} else {
+						bodyData = string(bodyBytes)
+					}
 				}
 
 				// Reconstruct body for downstream handlers

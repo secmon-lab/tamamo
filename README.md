@@ -166,15 +166,17 @@ Login endpoints support an `auth` field in `routes.json` that simulates realisti
   "headers": {"Content-Type": "application/json"},
   "body": "{\"success\": true, \"redirect\": \"/dashboard\"}",
   "auth": {
-    "failures_before_success": 2,
+    "min_failures": 3,
+    "success_probability": 0.2,
     "failure_status_code": 401,
     "failure_body": "{\"success\": false, \"error\": \"Invalid credentials\"}",
-    "failure_headers": {"Content-Type": "application/json"}
+    "failure_headers": {"Content-Type": "application/json"},
+    "credential_fields": ["username", "password"]
   }
 }
 ```
 
-The server tracks attempts per source IP. With `failures_before_success: 2`, the first 2 attempts return 401, and the 3rd succeeds — making the honeypot behave like a real system.
+The server tracks unique credential submissions per source IP. The first `min_failures` unique credentials always fail. After that, each new unique credential has a `success_probability` chance of succeeding — making the timing unpredictable and realistic. The same credential always returns the same result. Only fields listed in `credential_fields` are used to determine uniqueness (other fields like CSRF tokens are ignored). Both JSON and form-urlencoded submissions are supported.
 
 ## Event Notification
 
