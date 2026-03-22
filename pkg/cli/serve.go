@@ -28,6 +28,7 @@ func newServeCommand() *cli.Command {
 		logCfg       config.Logger
 		serverCfg    config.Server
 		webhookCfg   config.Webhook
+		pubsubCfg    config.PubSub
 		promptCfg    config.Prompt
 		scenarioPath string
 		keepTmp      bool
@@ -57,7 +58,17 @@ func newServeCommand() *cli.Command {
 	flags = append(flags, logCfg.Flags()...)
 	flags = append(flags, serverCfg.Flags()...)
 	flags = append(flags, webhookCfg.Flags()...)
+	flags = append(flags, pubsubCfg.Flags()...)
 	flags = append(flags, promptCfg.Flags()...)
+
+	// maskSecret masks a secret value for safe logging.
+	// Returns "(set)" if non-empty, "(not set)" if empty.
+	maskSecret := func(s string) string {
+		if s != "" {
+			return "(set)"
+		}
+		return "(not set)"
+	}
 
 	return &cli.Command{
 		Name:    "serve",
@@ -130,6 +141,23 @@ func newServeCommand() *cli.Command {
 			if we := webhookCfg.Configure(); we != nil {
 				emitters = append(emitters, we)
 			}
+			if pe, err := pubsubCfg.Configure(ctx); err != nil {
+				return err
+			} else if pe != nil {
+				emitters = append(emitters, pe)
+				defer func() { _ = pe.Close() }()
+			}
+
+			// Log emitter configuration
+			logger.Info("webhook emitter config",
+				"url", webhookCfg.URL,
+				"secret", maskSecret(webhookCfg.Secret),
+			)
+			logger.Info("pubsub emitter config",
+				"project_id", pubsubCfg.ProjectID,
+				"topic_id", pubsubCfg.TopicID,
+				"sa_key", maskSecret(pubsubCfg.ServiceAccountKey),
+			)
 
 			// Resolve node ID
 			nodeID := serverCfg.NodeID
