@@ -1,0 +1,50 @@
+name: Trivy
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - id: scan
+        name: Run Trivy vulnerability scanner (SARIF)
+        uses: aquasecurity/trivy-action@0.34.1
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-results.sarif"
+          exit-code: 1
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
+
+      - name: Display vulnerabilities (table)
+        if: always() && steps.scan.outcome != 'skipped'
+        uses: aquasecurity/trivy-action@0.34.1
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "table"
+          exit-code: 0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: failure() && steps.scan.outcome == 'failure'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
