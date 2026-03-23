@@ -42,6 +42,14 @@ func newStaticRouteHandler(route scenario.Route) http.HandlerFunc {
 	}
 }
 
+const (
+	// maxSourceIPs limits the number of tracked source IPs per auth route
+	// to prevent unbounded memory growth.
+	maxSourceIPs = 10000
+	// maxCredentialsPerIP limits the number of cached credential results per IP.
+	maxCredentialsPerIP = 1000
+)
+
 // authState tracks unique credential submissions per source IP.
 type authState struct {
 	// results caches the success/failure outcome for each credential hash.
@@ -70,8 +78,18 @@ func newAuthRouteHandler(route scenario.Route) http.HandlerFunc {
 		mu.Lock()
 		state, ok := attempts[sourceIP]
 		if !ok {
+			// Evict all entries if IP limit is reached
+			if len(attempts) >= maxSourceIPs {
+				clear(attempts)
+			}
 			state = &authState{results: make(map[string]bool)}
 			attempts[sourceIP] = state
+		}
+
+		// Evict credential cache if per-IP limit is reached
+		if len(state.results) >= maxCredentialsPerIP {
+			clear(state.results)
+			state.failures = 0
 		}
 
 		success, seen := state.results[credHash]
@@ -144,34 +162,39 @@ func computeCredentialHash(r *http.Request, credentialFields []string) string {
 	return hashString(strings.Join(parts, "\n"))
 }
 
-// parseBodyFields parses the request body into a string map based on content type.
-func parseBodyFields(contentType string, body []byte) map[string]string {
-	switch {
-	case strings.HasPrefix(contentType, "application/x-www-form-urlencoded"):
-		values, err := url.ParseQuery(string(body))
-		if err != nil {
-			return nil
-		}
-		result := make(map[string]string, len(values))
-		for k, v := range values {
-			if len(v) > 0 {
-				result[k] = v[0]
-			}
-		}
-		return result
-
-	default:
-		// Try JSON
-		var jsonMap map[string]any
-		if err := json.Unmarshal(body, &jsonMap); err != nil {
-			return nil
-		}
-		result := make(map[string]string, len(jsonMap))
-		for k, v := range jsonMap {
-			result[k] = fmt.Sprintf("%v", v)
-		}
-		return result
+// parseFormValues parses a url-encoded form body into a string map.
+// Returns nil if the body is not valid form data.
+func parseFormValues(body []byte) map[string]string {
+	values, err := url.ParseQuery(string(body))
+	if err != nil {
+		return nil
 	}
+	result := make(map[string]string, len(values))
+	for k, v := range values {
+		if len(v) > 0 {
+			result[k] = v[0]
+		}
+	}
+	return result
+}
+
+// parseBodyFields parses the request body into a flat string map based on content type.
+// Used for credential field extraction (not for event emission).
+func parseBodyFields(contentType string, body []byte) map[string]string {
+	if strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
+		return parseFormValues(body)
+	}
+
+	// Try JSON
+	var jsonMap map[string]any
+	if err := json.Unmarshal(body, &jsonMap); err != nil {
+		return nil
+	}
+	result := make(map[string]string, len(jsonMap))
+	for k, v := range jsonMap {
+		result[k] = fmt.Sprintf("%v", v)
+	}
+	return result
 }
 
 func hashString(s string) string {

@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -22,21 +21,14 @@ func (s *Server) emitMiddleware(next http.Handler) http.Handler {
 			bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, 1024*1024))
 			if err == nil && len(bodyBytes) > 0 {
 				contentType := r.Header.Get("Content-Type")
-				switch {
-				case strings.HasPrefix(contentType, "application/x-www-form-urlencoded"):
-					if values, err := url.ParseQuery(string(bodyBytes)); err == nil {
-						parsed := make(map[string]string, len(values))
-						for k, v := range values {
-							if len(v) > 0 {
-								parsed[k] = v[0]
-							}
-						}
+				if strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
+					if parsed := parseFormValues(bodyBytes); parsed != nil {
 						bodyData = parsed
 					} else {
 						bodyData = string(bodyBytes)
 					}
-				default:
-					// Try to parse as JSON
+				} else {
+					// Try to parse as JSON (preserves nested structures)
 					var jsonBody any
 					if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
 						bodyData = jsonBody
