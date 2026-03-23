@@ -5,12 +5,18 @@ linters:
   enable:
     - bodyclose
     - errcheck
+    - gocritic
     - govet
     - ineffassign
+    - misspell
     - staticcheck
     - unused
-    - gosimple
-    - typecheck
+  exclusions:
+    rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - bodyclose
+          - errcheck
   settings:
     errcheck:
       check-type-assertions: true
@@ -18,3 +24,8 @@ linters:
       enable-all: true
       disable:
         - fieldalignment
+        - shadow
+
+formatters:
+  enable:
+    - gofmt
