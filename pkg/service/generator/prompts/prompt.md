@@ -177,6 +177,7 @@ You may add additional realistic routes (API endpoints, static assets, etc.) to 
 - CSS should be professional and polished — this must fool security professionals
 - No external CDN links, fonts, or scripts — everything must be self-contained
 - Use realistic version numbers, company names, and technical details
+- **No excessive empty space** — every element should be sized to fit its content. Do NOT set containers to `min-height: 100vh` or `height: 100%` unless they genuinely need to fill the viewport (e.g., a full-screen background). Form containers, cards, panels, and sheets should shrink-wrap their content. If using a bottom-sheet or overlay layout, the sheet should only be as tall as the form content inside it — not stretch to fill the entire screen
 - The overall impression should be "this is a real internal tool, just maybe a bit slow"
 - Generate inline images (SVG, data URI) for logos, icons, and decorative elements to add realism
 - The taste/atmosphere should heavily influence how polished (or unpolished) the result looks
