@@ -165,8 +165,9 @@ func TestHTTPServer(t *testing.T) {
 	t.Run("events are emitted for requests", func(t *testing.T) {
 		initialCount := len(mock.getEvents())
 
-		_, err := http.Get(ts.URL + "/login")
+		resp, err := http.Get(ts.URL + "/login")
 		gt.NoError(t, err)
+		resp.Body.Close()
 
 		events := mock.getEvents()
 		gt.True(t, len(events) > initialCount)

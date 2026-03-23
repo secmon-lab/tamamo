@@ -1,0 +1,43 @@
+name: Gosec
+
+on:
+  push:
+    paths:
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@v2.24.7
+        with:
+          args: "-no-fail -fmt sarif -exclude-generated -out results.sarif ./..."
+
+      - name: Fix SARIF relationships schema
+        run: |
+          jq '(.runs[].tool.driver.rules // [])[] |= (if .relationships then .relationships |= map(select(. != null)) else . end)' results.sarif > results-fixed.sarif
+          mv results-fixed.sarif results.sarif
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
