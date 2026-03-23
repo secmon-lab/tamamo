@@ -17,15 +17,24 @@ func (s *Server) emitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Capture request body for event (limited to 1MB)
 		var bodyData any
-		if r.Body != nil && r.ContentLength > 0 {
+		if r.Body != nil {
 			bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, 1024*1024))
 			if err == nil && len(bodyBytes) > 0 {
-				// Try to parse as JSON
-				var jsonBody any
-				if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
-					bodyData = jsonBody
+				contentType := r.Header.Get("Content-Type")
+				if strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
+					if parsed := parseFormValues(bodyBytes); parsed != nil {
+						bodyData = parsed
+					} else {
+						bodyData = string(bodyBytes)
+					}
 				} else {
-					bodyData = string(bodyBytes)
+					// Try to parse as JSON (preserves nested structures)
+					var jsonBody any
+					if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
+						bodyData = jsonBody
+					} else {
+						bodyData = string(bodyBytes)
+					}
 				}
 
 				// Reconstruct body for downstream handlers

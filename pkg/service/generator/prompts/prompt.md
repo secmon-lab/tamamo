@@ -68,18 +68,26 @@ Real login pages often have more than just input fields. Pick a few (not all!) o
 
 **Images and assets:** You are encouraged to generate inline images (SVG, data URI PNG/JPEG) to make the page look more realistic. Logos, icons, background patterns — anything that adds to the believability. Write image files (e.g., `pages/logo.svg`, `pages/favicon.ico`) if it helps.
 
-### 3. `pages/dashboard.html` - Dashboard Page (Perpetual Loading)
+### 3. Post-login strategy
 
-Create a dashboard page that shows a perpetual loading state. The page should never finish loading (this is intentional — it keeps the attacker engaged). Style must match the login page.
+After a successful login, the attacker must NOT reach a working dashboard — the honeypot needs to stall or fail convincingly. **Choose ONE of the following strategies** based on what feels natural for the site's character:
 
-**Choose a loading style that fits the application's character** — do NOT always use the same spinner + status messages pattern. Pick one approach (or combine creatively):
+#### Strategy A: Server error page (`pages/error.html`)
 
-- **Skeleton UI**: Grey placeholder blocks that shimmer/pulse where content would be. Looks like the real dashboard is about to appear but never does. Most modern and convincing.
-- **Status messages**: Rotating text messages simulating system initialization ("Loading modules...", "Connecting to database...", etc.). 8-12 messages cycling every 3-5 seconds. Classic approach.
-- **Progress bar**: A progress bar that creeps forward very slowly (asymptotic — approaches but never reaches 100%). May include a percentage counter and estimated time remaining that keeps recalculating.
-- **Splash screen**: Full-screen branded splash with a subtle animation (spinning logo, pulsing dots, animated gradient). Feels like a heavy enterprise app booting up.
-- **Partial render**: Dashboard layout partially visible (sidebar, header, nav) but main content area shows a loading overlay. Most convincing — looks like the app loaded but data is still fetching.
-- **Connection retry**: Shows "Connecting to server..." with retry counter and fake error recovery. Cycles between "connected" and "reconnecting" states.
+Create a 500-series error page (500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable, etc.). The error page does NOT need to match the login page's style — in fact, raw unstyled error output is often more convincing. Choose an error presentation style that fits the site's implied tech stack:
+
+- **Raw stack trace dump** (most common in real incidents): A plain white page with a Java/Python/Ruby exception stack trace in monospace font. No styling, no layout — just the raw error output that a misconfigured framework spits out. This is what real developers see when something breaks in staging/production. Example: `java.lang.NullPointerException` with 30 lines of `at com.example.auth.SessionManager.createSession(...)`, or a Python `Traceback (most recent call last):` dump.
+- **Framework default error page**: The default error page of a web framework (Django yellow page, Rails red page, Spring Boot Whitelabel Error, ASP.NET YSOD). Minimally styled with framework branding.
+- **Branded error page**: A polished error page with the site's branding, incident ID, server name, timestamp, and a support contact message. This style is appropriate for enterprise/corporate sites that have custom error handling.
+- **Reverse proxy error**: A plain nginx/Apache/HAProxy error like "502 Bad Gateway" with minimal server info. Just a few lines of text.
+
+The corresponding route should return the appropriate 5xx status code. You MAY include a "Retry" button or auto-refresh that hits the same endpoint (which will keep returning the error).
+
+#### Strategy B: Hang (timeout)
+
+The dashboard route uses `"hang": true` in routes.json, which makes the server hold the connection open indefinitely without ever sending a response. The attacker's browser will eventually show its own timeout error. This is the simplest and most effective approach — no HTML page needed.
+
+**Do NOT create fake loading/spinner pages** that cycle through status messages or show progress bars without actual backend communication. An attacker inspecting the JavaScript will immediately see it's fake.
 
 ### 4. `routes.json` - Route Definitions
 
@@ -101,7 +109,7 @@ But whatever approach you choose, the target endpoint MUST exist in routes.json 
 - `GET /` → redirect to login page
 - `GET <login-path>` → serve login HTML (`body_file`)
 - `POST <auth-endpoint>` → login endpoint with `auth` strategy (see below)
-- `GET <dashboard-path>` → serve dashboard HTML (`body_file`)
+- `GET <dashboard-path>` → either serve error HTML (`body_file` with 5xx status) or hang (`"hang": true`)
 
 **Route format:**
 ```json
@@ -129,7 +137,7 @@ Use `body_file` for routes that serve HTML pages, `body` for inline JSON/text re
 
 **Authentication strategy (`auth` field):**
 
-The login endpoint MUST include an `auth` field. This makes the honeypot more realistic — real systems don't accept any credentials on the first try. The server tracks attempts per source IP and returns failure responses until the threshold is reached, then returns success.
+The login endpoint MUST include an `auth` field. This makes the honeypot more realistic — real systems don't accept any credentials on the first try. The server tracks unique credential submissions per source IP. The first `min_failures` unique credentials always fail. After that, each new unique credential has a `success_probability` chance of succeeding. The same credential always returns the same result (cached).
 
 ```json
 {
@@ -139,19 +147,25 @@ The login endpoint MUST include an `auth` field. This makes the honeypot more re
   "headers": {"Content-Type": "application/json"},
   "body": "{\"success\": true, \"redirect\": \"/dashboard\"}",
   "auth": {
-    "failures_before_success": 2,
+    "min_failures": 3,
+    "success_probability": 0.2,
     "failure_status_code": 401,
     "failure_body": "{\"success\": false, \"error\": \"Invalid username or password\"}",
-    "failure_headers": {"Content-Type": "application/json"}
+    "failure_headers": {"Content-Type": "application/json"},
+    "credential_fields": ["username", "password"]
   }
 }
 ```
 
-- `failures_before_success`: how many times to reject before accepting (1-3 is realistic)
+- `min_failures`: minimum number of unique credentials that must fail before any can succeed (2-4 is realistic). Use `3` as the standard value
+- `success_probability`: probability (0.0-1.0) that a new credential succeeds after min_failures is met. Use `0.2` as the standard value — this means roughly 1 in 5 unique credentials will succeed after the minimum failures, making the timing unpredictable
 - `failure_status_code`: HTTP status for rejections (401 or 403)
 - `failure_body`: response body for rejections — should match the success format
 - `failure_headers`: headers for rejection responses
-- The `status_code`, `headers`, and `body` at the route level define the SUCCESS response (used after enough failures)
+- `credential_fields`: **REQUIRED** — list of request body field names that represent credentials (e.g. `["username", "password"]`, `["email", "passcode"]`). These MUST exactly match the `name` attributes of the login form inputs. Only these fields are used to determine whether a login attempt is unique — other fields (CSRF tokens, hidden fields, etc.) are ignored
+- The `status_code`, `headers`, and `body` at the route level define the SUCCESS response
+
+**Important for form-based submissions:** If the login page uses a traditional HTML form POST (`<form method="POST">`), the success response should use HTTP 302 redirect to the dashboard page (set `status_code: 302` and include a `Location` header). For JavaScript fetch/XHR submissions, a JSON response with a redirect URL is appropriate.
 
 The login HTML page should handle both success and failure responses appropriately (show error messages on failure, redirect on success).
 
