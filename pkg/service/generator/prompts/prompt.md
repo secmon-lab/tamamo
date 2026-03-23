@@ -57,8 +57,17 @@ Real login pages often have more than just input fields. Pick a few (not all!) o
 - Notices/banners: System maintenance notice, Security warning, Password expiry alert, Browser compatibility warning, New version available, Scheduled downtime, "Unauthorized access is monitored" disclaimer, Session expired message, IP restriction notice
 - Branding elements: Company name, Division/department name, Product version, Build number, Environment badge (Production/Staging/Development/QA), Last updated date, Server region, Deployment ID, Support contact, "Internal use only" watermark
 
+**CRITICAL — Realism, not fiction:**
+The page must look like it was built by a real developer at a real company using standard web frameworks and UI libraries. Think Bootstrap, Material UI, Ant Design, or corporate intranet templates. Real internal admin pages are **mundane and boring** — they are NOT:
+- Dark/military/tactical themed ("RESTRICTED ACCESS", "SECURITY CLEARANCE", "INITIALIZE CONNECTION")
+- Hollywood hacker aesthetic (monospace everything, neon-on-black, terminal-style)
+- Overly dramatic language ("FEDERAL OFFENSE", "MONITORING IN PROGRESS", "CLASSIFIED")
+- Sci-fi/cyberpunk styled with all-caps labels and aggressive warnings
+
+Real admin pages use normal fonts (sans-serif), normal colors (white/light grey backgrounds, blue/green accents), normal language ("Sign in", "Log in", "Email", "Password"), and look like every other boring enterprise web app. Even government and military systems use standard web UIs — they don't look like movie props. The target audience is security professionals who will immediately dismiss anything that looks theatrical.
+
 **Technical requirements:**
-- Must look like a genuine internal admin login page
+- Must look like a genuine internal admin login page built with standard web development practices
 - Include a company/app logo area — you may use inline SVG, CSS shapes, data URI images, or emoji to create a logo. Be creative and make it look real
 - A submit button with appropriate label (or equivalent in the display language)
 - Style must match the configured visual style and taste
@@ -177,6 +186,7 @@ You may add additional realistic routes (API endpoints, static assets, etc.) to 
 - CSS should be professional and polished — this must fool security professionals
 - No external CDN links, fonts, or scripts — everything must be self-contained
 - Use realistic version numbers, company names, and technical details
+- **No excessive empty space** — every element should be sized to fit its content. Do NOT set containers to `min-height: 100vh` or `height: 100%` unless they genuinely need to fill the viewport (e.g., a full-screen background). Form containers, cards, panels, and sheets should shrink-wrap their content. If using a bottom-sheet or overlay layout, the sheet should only be as tall as the form content inside it — not stretch to fill the entire screen
 - The overall impression should be "this is a real internal tool, just maybe a bit slow"
 - Generate inline images (SVG, data URI) for logos, icons, and decorative elements to add realism
 - The taste/atmosphere should heavily influence how polished (or unpolished) the result looks
